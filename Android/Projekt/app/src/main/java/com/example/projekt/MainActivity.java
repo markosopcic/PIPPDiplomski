@@ -1,5 +1,6 @@
 package com.example.projekt;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -21,6 +22,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.provider.SyncStateContract;
 import android.util.Log;
 import android.view.View;
@@ -62,6 +64,16 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        sending = false;
+        Intent stopIntent = new Intent(MainActivity.this, LocationService.class);
+        stopIntent.setAction("stop");
+        startService(stopIntent);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
