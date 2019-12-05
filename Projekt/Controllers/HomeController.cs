@@ -20,10 +20,12 @@ namespace Projekt.Controllers
     {
         private readonly IHubContext<CesiumHub> wsContext;
         private readonly ILogger<HomeController> _logger;
-        public HomeController(ILogger<HomeController> logger, IHubContext<CesiumHub> wsContext)
+        private readonly DbContext context;
+        public HomeController(ILogger<HomeController> logger, IHubContext<CesiumHub> wsContext, DbContext context)
         {
             _logger = logger;
             this.wsContext = wsContext;
+            this.context = context;
         }
 
         public IActionResult Index()
@@ -46,6 +48,33 @@ namespace Projekt.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        [HttpPost]
+        [Route("/AddPosition")]
+        public IActionResult AddPosition([FromBody]PositionDTO position)
+        {
+            Position p = new Position { Name = position.Name, Latitude = position.Latitude, Longitude = position.Longitude, Time = DateTime.Now };
+            context.Positions.Add(p);
+            context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("/AddHistoricalPositions")]
+        public IActionResult AddHistoricalPositions([FromBody]HistoricPositionsDTO positions)
+        {
+            if(positions == null || positions.Name == null || positions.Positions == null)
+            {
+                throw new ArgumentNullException(nameof(positions));
+            }
+            foreach(var position in positions.Positions)
+            {
+                context.Add(new Position { Name = positions.Name, Longitude = position.Longitude, Latitude = position.Latitude, Time = position.Time });
+            }
+            context.SaveChanges();
+
+            return Ok();
         }
 
  

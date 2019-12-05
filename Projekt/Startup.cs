@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -18,11 +19,12 @@ namespace Projekt
     {
 
        
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration,IWebHostEnvironment env)
         {
             Configuration = configuration;
+            this.env = env;
         }
-
+        public IWebHostEnvironment env { get; set; }
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -30,7 +32,10 @@ namespace Projekt
         {
             services.AddControllersWithViews();
             services.AddSignalR();
-
+            if(env.IsDevelopment())
+                services.AddDbContext<DbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("ProjektContext")));
+            else
+                services.AddDbContext<DbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("LocalContext")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,11 +54,9 @@ namespace Projekt
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-
             app.UseRouting();
 
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
