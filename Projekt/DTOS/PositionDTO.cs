@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace Projekt.DTOS
 {
@@ -7,5 +8,7 @@ namespace Projekt.DTOS
         public string Name { get; set; }
         public double Longitude { get; set; }
         public double Latitude { get; set; }
+
+        public DateTime Time { get; set; }
     }
 }

@@ -12,35 +12,48 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.room.Room;
+
+import com.example.projekt.networking.PositionSender;
+import com.example.projekt.storage.Position;
+import com.example.projekt.storage.PositionDatabase;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-import static com.example.projekt.MainActivity.defaultHost;
 
 public class LocationService extends Service {
     public static final String CHANNEL_ID = "ForegroundServiceChannel";
+    public int interval = Constants.DEFAULT_INTERVAL_MILLIS;
+    private final IBinder mBinder = new LocationBinder();
+    List<ILocationListener> locationListeners = new ArrayList<>();
+
+
     LocationManager locationManager;
     Location loc;
     LocationListener listener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            if(loc == null || location.getTime() - loc.getTime() > 2000 || (location.getAccuracy() > loc.getAccuracy()))
+            if(loc != null) {
+                double p = 0.017453292519943295;    // Math.PI / 180
+                double a = 0.5 - Math.cos((location.getLatitude() - loc.getLatitude()) * p) / 2 +
+                        Math.cos(loc.getLatitude() * p) * Math.cos(location.getLatitude() * p) *
+                                (1 - Math.cos((location.getLongitude() - loc.getLongitude()) * p)) / 2;
+                double d = 12742 * Math.asin(Math.sqrt(a))*1000;
+                Log.d("Position_debug",String.format("%.2f %f",d,location.getAccuracy()));
+            }
+            if (loc == null || location.getTime() - loc.getTime() > interval || (location.getAccuracy() < loc.getAccuracy()))
                 loc = location;
         }
 
@@ -59,32 +72,36 @@ public class LocationService extends Service {
 
         }
     };
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
     }
 
     Disposable task;
 
     @Override
     public void onDestroy() {
-        task.dispose();
+        if(task != null) {
+            task.dispose();
+        }
         locationManager.removeUpdates(listener);
+        locationListeners.clear();
         stopForeground(true);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(intent.getAction().equals("stop")){
+        if (intent.getAction().equals("stop")) {
             onDestroy();
-            return super.onStartCommand(intent,flags,startId);
+            return super.onStartCommand(intent, flags, startId);
         }
         locationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
+
         String input = intent.getStringExtra("inputExtra");
-        final String name = intent.getStringExtra("name");
-        final String host = intent.getStringExtra("host");
+        interval = intent.getIntExtra("interval", Constants.DEFAULT_INTERVAL_MILLIS);
         createNotificationChannel();
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -98,30 +115,20 @@ public class LocationService extends Service {
                 .build();
         if (
                 checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED ||
-                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return super.onStartCommand(intent,flags,startId);
+                        checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return super.onStartCommand(intent, flags, startId);
         }
-        final OkHttpClient  client = new OkHttpClient.Builder().addInterceptor(new LoggingInterceptor()).build();
         startForeground(1, notification);
-        task = Observable.interval(5000, TimeUnit.MILLISECONDS).subscribe(new Consumer<Long>() {
-            @Override
-            public void accept(Long aLong){
-                try {
-                    if(loc == null) return;
-                    String h=defaultHost;
-                    if(host.trim().length()!=0){
-                        h=host;
-                    }
-                    String data = "{\"Name\":\"" + name + "\",\"longitude\":" + loc.getLongitude() + ",\"latitude\":" + loc.getLatitude() + "}";
-                    Response r = client.newCall(new Request.Builder().post(RequestBody.create(data, MediaType.parse("application/json"))).url(h+"/Position").build()).execute();
-                    Log.d("response",Integer.toString(r.code()));
-                }catch(Exception e){
-                    System.out.println(e);
-                }
+
+
+        task = Observable.interval(interval, TimeUnit.MILLISECONDS).subscribe((e) -> {
+            for(ILocationListener listener : locationListeners){
+                listener.nextLocation(loc);
             }
-        });
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2000, 0, (LocationListener) listener);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 0, listener);
+                }
+        );
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, interval, 0, (LocationListener) listener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, interval, 0, listener);
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -136,6 +143,12 @@ public class LocationService extends Service {
 
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
+        }
+    }
+
+    public class LocationBinder extends Binder {
+        LocationService getService(){
+            return LocationService.this;
         }
     }
 }

@@ -11,6 +11,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Projekt.DAL.Interfaces;
+using Projekt.DAL.Repositories;
 using Projekt.Hubs;
 
 namespace Projekt
@@ -31,6 +33,7 @@ namespace Projekt
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+            services.AddTransient<IPositionRepository, PositionRepository>();
             services.AddSignalR();
             if(env.IsDevelopment())
                 services.AddDbContext<DbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("ProjektContext")));
