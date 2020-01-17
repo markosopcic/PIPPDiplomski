@@ -11,6 +11,5 @@ namespace Projekt.DTOS
         public double Longitude { get; set; }
         public double Latitude { get; set; }
 
-        public DateTime Expires { get; set; }
     }
 }

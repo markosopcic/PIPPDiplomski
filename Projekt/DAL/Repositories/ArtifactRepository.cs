@@ -28,7 +28,9 @@ namespace Projekt.DAL.Repositories
 
         public List<Artifact> GetWonArtifacts(double longitude, double latitude,DateTime time)
         {
-            return context.Artifacts.Where(e => e.Expires > time && DistanceTo(e.Latitude, e.Longitude, latitude, longitude) < 0.005).ToList();
+            var artifacts = context.Artifacts.Where(e => DistanceTo(e.Latitude, e.Longitude, latitude, longitude) < 0.005);
+            context.Artifacts.RemoveRange(artifacts);
+            return artifacts.ToList();
         }
 
         public static double DistanceTo(double lat1, double lon1, double lat2, double lon2)
@@ -51,7 +53,7 @@ namespace Projekt.DAL.Repositories
         {
             try
             {
-                context.Artifacts.Add(new Artifact { Longitude = artifact.Longitude, Latitude = artifact.Latitude, Expires = artifact.Expires });
+                context.Artifacts.Add(new Artifact { Longitude = artifact.Longitude, Latitude = artifact.Latitude});
                 context.SaveChanges();
                 return true;
             }catch(Exception e)

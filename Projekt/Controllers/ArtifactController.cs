@@ -32,6 +32,13 @@ namespace Projekt.Controllers
             return BadRequest();
         }
 
+
+        [Route("/Artifact/GetActiveArtifacts")]
+        public IActionResult GetActiveArtifacts()
+        {
+            return Json(artifactRepository.GetAllArtifacts());
+        }
+
         public IActionResult Index()
         {
             return View();

@@ -41,8 +41,6 @@ namespace Projekt
                 entity.Property(e => e.Longitude).HasColumnName("longitude");
 
                 entity.Property(e => e.Latitude).HasColumnName("latitude");
-
-                entity.Property(e => e.Expires).HasColumnName("expires");
             });
 
             modelBuilder.Entity<Position>(entity =>
