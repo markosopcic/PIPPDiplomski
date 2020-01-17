@@ -274,17 +274,9 @@ function createPaths(result) {
         }
     }
 
-    viewer.entities.removeAll();
-    viewer.dataSources.removeAll();
+
     czml[0].clock.interval = minTime.toISOString() + "/" + maxTime.toISOString();
     czml[0].clock.currentTime = minTime.toISOString();
-    let counter = 0
-    let czmls = []
-    for (let i = 0; i < Object.keys(result).length; i++) {
-        let el = [];
-        el.push(JSON.parse(JSON.stringify(czml[0])));
-        czmls.push(el);
-    }
     for (const [key, value] of Object.entries(result)) {
         if (value.length === 0) {
             continue;
@@ -293,7 +285,6 @@ function createPaths(result) {
         for (var i = 0; i < 3; i++) {
             czmlPath.path.material.polylineOutline.color.rgba.push(Math.floor(Math.random() * 256));
         }
-        czmls[counter].id = key+"-root";
         czmlPath.id = key;
         czmlPath.path.material.polylineOutline.color.rgba.push(255);
         czmlPath.path.material.polylineOutline.outlineColor.rgba = czmlPath.path.material.polylineOutline.color.rgba;
@@ -309,21 +300,26 @@ function createPaths(result) {
         }
         let promise = Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, positions).then(function (updated) {
             for (let x = 0; x < updated.length; x++) {
-                czmlPath.position.cartographicDegrees.push(new Date(value[x].time).toISOString(), value[x].longitude, value[x].latitude, updated[x].height+0.2);
+                czmlPath.position.cartographicDegrees.push(new Date(value[x].time).toISOString(), value[x].longitude, value[x].latitude, updated[x].height + 0.2);
             }
-            czmls[counter].push(czmlPath);
+            czml.push(czmlPath);
+            if (czml.length === maxPaths + 1) {
                 if (canceledLoading) {
                     canceledLoading = false;
                     return;
                 }
-            console.log(czmls[counter]);
+                viewer.entities.removeAll();
+                viewer.dataSources.removeAll();
                 $("#history-confirm").attr("disabled", false);
                 $("#historymodal").modal("hide");
-            viewer.dataSources.add(Cesium.CzmlDataSource.load(czmls[counter])).then(function (ds) {
-            });
-            counter+=1
+                viewer.dataSources.add(Cesium.CzmlDataSource.load(czml)).then(function (ds) {
+                    viewer.trackedEntity = ds.entities.getById(key);
+                });
 
+            }
+            console.log(czml);
         });
+        console.log("wat");
     }
 }
 
