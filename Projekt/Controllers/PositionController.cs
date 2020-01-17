@@ -21,12 +21,14 @@ namespace Projekt.Controllers
     {
         private readonly IHubContext<CesiumHub> wsContext;
         private readonly ILogger<PositionController> _logger;
+        private readonly IArtifactRepository artifactRepository;
         private IPositionRepository positionRepository;
-        public PositionController(ILogger<PositionController> logger, IHubContext<CesiumHub> wsContext, IPositionRepository  positionRepository)
+        public PositionController(ILogger<PositionController> logger, IHubContext<CesiumHub> wsContext, IPositionRepository  positionRepository,IArtifactRepository artifactRepo)
         {
             _logger = logger;
             this.wsContext = wsContext;
             this.positionRepository = positionRepository;
+            this.artifactRepository = artifactRepo;
         }
 
         public IActionResult Index()
@@ -67,6 +69,11 @@ namespace Projekt.Controllers
             }
             if (positionRepository.AddPosition(position))
             {
+                var nearArtifacts = artifactRepository.GetWonArtifacts(position.Longitude, position.Latitude,position.Time);
+                if(nearArtifacts.Count > 0)
+                {
+                    return Json(nearArtifacts);
+                }
                 return Ok();
             }
             else
@@ -127,12 +134,13 @@ namespace Projekt.Controllers
                 if(pair.Value != DateTime.MinValue && (DateTime.Now - pair.Value).TotalMinutes > 10)
                 {
                     CesiumHub.ClientsActive[pair.Key] = DateTime.MinValue;
+                    CesiumHub.ClientsConnections.Remove(pair.Key);
                     wsContext.Clients.All.SendAsync("InactiveUser", pair.Key);
                 }
             }
             if (CesiumHub.ClientsActive.GetValueOrDefault(position.Name,DateTime.MinValue) == DateTime.MinValue)
             {
-                CesiumHub.ClientsActive[position.Name] = DateTime.Now;
+                CesiumHub.ClientsActive[position.Name] = position.Time;
                 wsContext.Clients.All.SendAsync("NewActiveUser", position.Name);
             }
             wsContext.Clients.Group(position.Name).SendAsync("Position",position.Name,position.Latitude, position.Longitude);

@@ -8,10 +8,11 @@ namespace Projekt.Hubs
 {
     public class CesiumHub:Hub
     {
+
+
         public static Dictionary<String, List<String>> ClientsToUsers = new Dictionary<string, List<string>>();
         public static Dictionary<String, DateTime> ClientsActive = new Dictionary<string, DateTime>();
-
-
+        public static Dictionary<String, String> ClientsConnections = new Dictionary<string, string>();
         public override Task OnConnectedAsync()
         {
             ClientsToUsers.Add(Context.ConnectionId, new List<string>());
@@ -22,7 +23,17 @@ namespace Projekt.Hubs
             ClientsToUsers.Remove(Context.ConnectionId);
             return base.OnDisconnectedAsync(exception);
         }
+        
+        public async Task PhoneUserConnected(string user)
+        {
+            ClientsConnections.Add(user, Context.ConnectionId);
+        }
 
+
+        public async Task PhoneUserDisconnected(string user)
+        {
+            ClientsConnections.Remove(user);
+        }
 
         public async Task AddNewFollowing(string user)
         {

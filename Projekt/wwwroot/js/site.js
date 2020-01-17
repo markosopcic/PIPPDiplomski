@@ -22,6 +22,7 @@ $(document).ready(function () {
         shadows: true,
         shouldAnimate: true
     });
+    setupArtifactSending();
 
     $("#user-search").on("input", function (e) {
         if (e.target.value.length === 0) {
@@ -145,6 +146,38 @@ $(document).ready(function () {
 
 });
 
+function setupArtifactSending() {
+    viewer.canvas.addEventListener('click', function (e) {
+        if ($("#artifact-placement-active").prop("checked")) {
+            var mousePosition = new Cesium.Cartesian2(e.clientX, e.clientY);
+
+            var ellipsoid = viewer.scene.globe.ellipsoid;
+            var cartesian = viewer.camera.pickEllipsoid(mousePosition, ellipsoid);
+            if (cartesian) {
+                var cartographic = ellipsoid.cartesianToCartographic(cartesian);
+                var longitude = Cesium.Math.toDegrees(cartographic.longitude);
+                var latitude = Cesium.Math.toDegrees(cartographic.latitude);
+                if (latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180) {
+                    var data = {
+                        "longitude": longitude, "latitude": latitude, "expires": new Date().toISOString()
+                    };
+                    $.ajax({
+                        method: "POST",
+                        data: JSON.stringify(data),
+                        headers:{"Content-Type":"application/json"},
+                        url: "/Artifact/AddArtifact",
+                        success: function (result) { console.log(result);  },
+                        error: function (error) { console.log(error); }
+                    });
+                    $("#artifact-placement-active").bootstrapToggle("off");
+                }
+            } else {
+                alert('Pick a more detailed location!');
+            }
+        }
+    }, false);
+}
+
 
 function setupVisuals() {
     $("#history-users").select2();
@@ -241,9 +274,17 @@ function createPaths(result) {
         }
     }
 
-
+    viewer.entities.removeAll();
+    viewer.dataSources.removeAll();
     czml[0].clock.interval = minTime.toISOString() + "/" + maxTime.toISOString();
     czml[0].clock.currentTime = minTime.toISOString();
+    let counter = 0
+    let czmls = []
+    for (let i = 0; i < Object.keys(result).length; i++) {
+        let el = [];
+        el.push(JSON.parse(JSON.stringify(czml[0])));
+        czmls.push(el);
+    }
     for (const [key, value] of Object.entries(result)) {
         if (value.length === 0) {
             continue;
@@ -252,6 +293,7 @@ function createPaths(result) {
         for (var i = 0; i < 3; i++) {
             czmlPath.path.material.polylineOutline.color.rgba.push(Math.floor(Math.random() * 256));
         }
+        czmls[counter].id = key+"-root";
         czmlPath.id = key;
         czmlPath.path.material.polylineOutline.color.rgba.push(255);
         czmlPath.path.material.polylineOutline.outlineColor.rgba = czmlPath.path.material.polylineOutline.color.rgba;
@@ -269,24 +311,19 @@ function createPaths(result) {
             for (let x = 0; x < updated.length; x++) {
                 czmlPath.position.cartographicDegrees.push(new Date(value[x].time).toISOString(), value[x].longitude, value[x].latitude, updated[x].height+0.2);
             }
-            czml.push(czmlPath);
-            if (czml.length === maxPaths + 1) {
+            czmls[counter].push(czmlPath);
                 if (canceledLoading) {
                     canceledLoading = false;
                     return;
                 }
-                viewer.entities.removeAll();
-                viewer.dataSources.removeAll();
+            console.log(czmls[counter]);
                 $("#history-confirm").attr("disabled", false);
                 $("#historymodal").modal("hide");
-                viewer.dataSources.add(Cesium.CzmlDataSource.load(czml)).then(function (ds) {
-                    viewer.trackedEntity = ds.entities.getById(key);
-                });
-                
-            }
-            console.log(czml);
+            viewer.dataSources.add(Cesium.CzmlDataSource.load(czmls[counter])).then(function (ds) {
+            });
+            counter+=1
+
         });
-        console.log("wat");
     }
 }
 
@@ -371,7 +408,6 @@ var pathTemplate = {
             }
         ],
         "style": "FILL",
-        "text": "Test Vehicle",
         "verticalOrigin": "CENTER"
     },
     "model": {

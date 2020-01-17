@@ -9,6 +9,8 @@
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.63/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.12/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.12/dist/js/select2.min.js"></script>
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 </head>
 <body>
     <div id="navbar">
@@ -25,6 +27,11 @@
                     <li  class="nav-item">
                         <a class="btn nav-link" data-toggle="modal" data-target="#historymodal">History</a>
                     </li>
+                    <li class="nav-item">
+                        <label class="nav-link">
+                            Artifact placement active
+                            <input type="checkbox" data-toggle="toggle" data-onstyle="success" data-offstyle="danger" id="artifact-placement-active" data-height="10" data-width="50">
+                        </label></li>
 
                 </ul>
             </div>

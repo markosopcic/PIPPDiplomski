@@ -34,6 +34,7 @@ namespace Projekt
         {
             services.AddControllersWithViews();
             services.AddTransient<IPositionRepository, PositionRepository>();
+            services.AddTransient<IArtifactRepository, ArtifactRepository>();
             services.AddSignalR();
             if(env.IsDevelopment())
                 services.AddDbContext<DbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("ProjektContext")));

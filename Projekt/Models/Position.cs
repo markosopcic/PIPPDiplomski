@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Projekt
+namespace Projekt.Models
 {
     public partial class Position
     {
