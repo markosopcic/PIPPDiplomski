@@ -30,6 +30,22 @@ namespace Projekt.Controllers
 
         public IActionResult Index()
         {
+            foreach (KeyValuePair<string, DateTime> pair in new Dictionary<string, DateTime>(CesiumHub.ClientsActive))
+            {
+                if (pair.Value != DateTime.MinValue && (DateTime.Now - pair.Value).TotalMinutes > 10)
+                {
+                    CesiumHub.ClientsActive[pair.Key] = DateTime.MinValue;
+                    CesiumHub.ClientsConnections.Remove(pair.Key);
+                    wsContext.Clients.All.SendAsync("InactiveUser", pair.Key);
+                }
+            }
+
+            return View();
+        }
+
+        [Route("/Mobile")]
+        public IActionResult Mobile()
+        {
             return View();
         }
 

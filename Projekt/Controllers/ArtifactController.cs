@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Projekt.DAL.Interfaces;
 using Projekt.DTOS;
+using Projekt.Hubs;
 
 namespace Projekt.Controllers
 {
@@ -12,10 +14,12 @@ namespace Projekt.Controllers
     {
 
         private IArtifactRepository artifactRepository;
+        private IHubContext<CesiumHub> wsContext;
 
-        public ArtifactController(IArtifactRepository artifactRepository)
+        public ArtifactController(IArtifactRepository artifactRepository, IHubContext<CesiumHub> wsContext)
         {
             this.artifactRepository = artifactRepository;
+            this.wsContext = wsContext;
         }
         [Route("/Artifact/AddArtifact")]
         [HttpPost]
@@ -25,9 +29,12 @@ namespace Projekt.Controllers
             {
                 return BadRequest("Invalid coordinates");
             }
-            if (artifactRepository.AddArtifact(artifact))
+            var id = artifactRepository.AddArtifact(artifact);
+            if (id.HasValue)
             {
-                return Ok();
+                var art = artifactRepository.GetById(id.Value);
+                wsContext.Clients.All.SendAsync("ArtifactSet", id, art.Longitude, art.Latitude);
+                return Json(id.Value);
             }
             return BadRequest();
         }

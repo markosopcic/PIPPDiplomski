@@ -20,11 +20,6 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.room.Room;
-
-import com.example.projekt.networking.PositionSender;
-import com.example.projekt.storage.Position;
-import com.example.projekt.storage.PositionDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +32,7 @@ public class LocationService extends Service {
     public static final String CHANNEL_ID = "ForegroundServiceChannel";
     public int interval = Constants.DEFAULT_INTERVAL_MILLIS;
     private final IBinder mBinder = new LocationBinder();
-    List<ILocationListener> locationListeners = new ArrayList<>();
+    public List<ILocationListener> locationListeners = new ArrayList<>();
 
 
     LocationManager locationManager;
@@ -102,6 +97,7 @@ public class LocationService extends Service {
 
         String input = intent.getStringExtra("inputExtra");
         interval = intent.getIntExtra("interval", Constants.DEFAULT_INTERVAL_MILLIS);
+        boolean networkGPS = intent.getBooleanExtra("network",false);
         createNotificationChannel();
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -127,7 +123,9 @@ public class LocationService extends Service {
             }
                 }
         );
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, interval, 0, (LocationListener) listener);
+        if(networkGPS) {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, interval, 0, (LocationListener) listener);
+        }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, interval, 0, listener);
 
         return super.onStartCommand(intent, flags, startId);

@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.room.Room;
 
+import com.example.projekt.artifactsearch.ArtifactSearch;
 import com.example.projekt.networking.PositionSender;
 import com.example.projekt.storage.Position;
 import com.example.projekt.storage.PositionDatabase;
@@ -29,13 +30,13 @@ import okhttp3.OkHttpClient;
 public class MainActivity extends AppCompatActivity implements ILocationListener {
     public PositionDatabase positionDatabase;
     public PositionSender sender;
-    Button trackingToggle, upload;
+    Button trackingToggle, upload,artifactHunt;
     TextView name, host, interval,longitude,latitude;
-    public Switch offlineTracking;
+    public Switch offlineTracking,networkGPS;
     boolean sending = false;
     OkHttpClient client;
     LocationManager locationManager;
-    LocationService locationService;
+    public static LocationService locationService;
     private ServiceConnection connection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -69,8 +70,19 @@ public class MainActivity extends AppCompatActivity implements ILocationListener
         name = findViewById(R.id.name);
         host = findViewById(R.id.host);
         interval = findViewById(R.id.interval);
+        networkGPS = findViewById(R.id.networkgps);
         longitude = findViewById(R.id.longitude);
         latitude = findViewById(R.id.latitude);
+        artifactHunt  =findViewById(R.id.artifacthunt);
+        artifactHunt.setOnClickListener(e -> {
+            if(locationService == null || offlineTracking.isChecked()){
+                Toast.makeText(this,"You have to start online tracking in order to track artifacts!",Toast.LENGTH_LONG).show();
+                return;
+            }
+            Intent intent = new Intent(MainActivity.this, ArtifactSearch.class);
+            intent.putExtra("name",name.getText().toString());
+            MainActivity.this.startActivity(intent);
+        });
         client = new OkHttpClient.Builder().addInterceptor(new LoggingInterceptor()).build();
         offlineTracking = findViewById(R.id.offlinetrackingswitch);
         checkPermissions();
@@ -89,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements ILocationListener
                     duration = Integer.parseInt(interval.getText().toString()) * 1000;
                 }
                 intent.putExtra("interval", duration);
+                intent.putExtra("network",networkGPS.isChecked());
                 intent.setAction("start");
                 startForegroundService(intent);
                 bindService(intent,connection,Context.BIND_AUTO_CREATE);
@@ -98,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements ILocationListener
                 host.setEnabled(false);
                 name.setEnabled(false);
                 interval.setEnabled(false);
+                networkGPS.setEnabled(false);
             } else {
                 sending = false;
                 trackingToggle.setText(Constants.TRACKING_START_TEXT);
@@ -105,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements ILocationListener
                 host.setEnabled(true);
                 name.setEnabled(true);
                 interval.setEnabled(true);
+                networkGPS.setEnabled(true);
                 Intent stopIntent = new Intent(MainActivity.this, LocationService.class);
                 stopIntent.setAction("stop");
                 startService(stopIntent);

@@ -16,6 +16,8 @@ namespace Projekt.DAL.Interfaces
 
         List<Artifact> GetWonArtifacts(double longitude, double latitude,DateTime time);
 
-        bool AddArtifact(ArtifactDTO artifact);
+        int? AddArtifact(ArtifactDTO artifact);
+
+        Artifact GetById(int id);
     }
 }

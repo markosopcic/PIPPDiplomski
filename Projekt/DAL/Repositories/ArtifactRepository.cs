@@ -28,7 +28,7 @@ namespace Projekt.DAL.Repositories
 
         public List<Artifact> GetWonArtifacts(double longitude, double latitude,DateTime time)
         {
-            var artifacts = context.Artifacts.Where(e => DistanceTo(e.Latitude, e.Longitude, latitude, longitude) < 0.005);
+            var artifacts = context.Artifacts.AsEnumerable().Where(e => DistanceTo(e.Latitude, e.Longitude, latitude, longitude) < 0.015).ToList();
             context.Artifacts.RemoveRange(artifacts);
             return artifacts.ToList();
         }
@@ -49,17 +49,23 @@ namespace Projekt.DAL.Repositories
 
         }
 
-        public bool AddArtifact(ArtifactDTO artifact)
+        public int? AddArtifact(ArtifactDTO artifact)
         {
             try
             {
                 context.Artifacts.Add(new Artifact { Longitude = artifact.Longitude, Latitude = artifact.Latitude});
                 context.SaveChanges();
-                return true;
+                return context.Artifacts.Where(e => e.Longitude == artifact.Longitude && e.Latitude == artifact.Latitude).First().Id;
             }catch(Exception e)
             {
-                return false;
+                return null;
             }
+        }
+
+        public Artifact GetById(int id)
+        {
+            var res = context.Artifacts.Where(e => e.Id == id).FirstOrDefault();
+            return res;
         }
     }
 }

@@ -121,4 +121,26 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/longitude" />
+
+    <Button
+        android:id="@+id/artifacthunt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Artifact hunt"
+        app:layout_constraintBottom_toTopOf="@+id/name"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/latitude" />
+
+    <Switch
+        android:id="@+id/networkgps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="23dp"
+        android:text="Use Network Triangulation"
+        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/offlinetrackingswitch" />
 </androidx.constraintlayout.widget.ConstraintLayout>

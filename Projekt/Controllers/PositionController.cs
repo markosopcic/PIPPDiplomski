@@ -69,11 +69,7 @@ namespace Projekt.Controllers
             }
             if (positionRepository.AddPosition(position))
             {
-                var nearArtifacts = artifactRepository.GetWonArtifacts(position.Longitude, position.Latitude,position.Time);
-                if(nearArtifacts.Count > 0)
-                {
-                    return Json(nearArtifacts);
-                }
+
                 return Ok();
             }
             else
@@ -143,8 +139,20 @@ namespace Projekt.Controllers
                 CesiumHub.ClientsActive[position.Name] = position.Time;
                 wsContext.Clients.All.SendAsync("NewActiveUser", position.Name);
             }
+
+            var nearArtifacts = artifactRepository.GetWonArtifacts(position.Longitude, position.Latitude, position.Time);
+            if (nearArtifacts.Count > 0)
+            {
+                foreach (var artifact in nearArtifacts)
+                {
+                    wsContext.Clients.All.SendAsync("ArtifactWon", artifact.Id.ToString());
+                }
+
+            }
+
+
             wsContext.Clients.Group(position.Name).SendAsync("Position",position.Name,position.Latitude, position.Longitude);
-            return Ok();
+            return Json(nearArtifacts);
         }
 
         public IActionResult GetActiveUsers()
