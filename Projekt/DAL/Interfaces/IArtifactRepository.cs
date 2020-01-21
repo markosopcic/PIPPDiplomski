@@ -18,6 +18,7 @@ namespace Projekt.DAL.Interfaces
 
         int? AddArtifact(ArtifactDTO artifact);
 
+        void GivePoints(int points, string user);
         Artifact GetById(int id);
     }
 }

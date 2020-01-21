@@ -30,6 +30,7 @@ namespace Projekt.DAL.Repositories
         {
             var artifacts = context.Artifacts.AsEnumerable().Where(e => DistanceTo(e.Latitude, e.Longitude, latitude, longitude) < 0.015).ToList();
             context.Artifacts.RemoveRange(artifacts);
+            context.SaveChanges();
             return artifacts.ToList();
         }
 
@@ -66,6 +67,23 @@ namespace Projekt.DAL.Repositories
         {
             var res = context.Artifacts.Where(e => e.Id == id).FirstOrDefault();
             return res;
+        }
+
+        public void GivePoints(int points, string user)
+        {
+            var u = context.Scores.Where(e => e.User == user).ToList();
+            if(u.Count == 0)
+            {
+                context.Scores.Add(new Score { User = user, Points = points });
+                context.SaveChanges();
+            }
+            else
+            {
+                var us = u.ElementAt(0);
+                us.Points += points;
+                context.Scores.Update(us);
+                context.SaveChanges();
+            }
         }
     }
 }

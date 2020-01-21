@@ -7,7 +7,7 @@ var trackedUser = null;
 var canceledLoading = false;
 $(document).ready(function () {
 
-    artifacts = [];
+    artifacts = {};
     users = {};
     labels = {};
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiODg4MzNhYi00NGIyLTQ4NTctODljOC1kNTZjY2FkMWY0YjEiLCJpZCI6MTAxMjcsInNjb3BlcyI6WyJhc2wiLCJhc3IiLCJhc3ciLCJnYyJdLCJpYXQiOjE1NTk2NjMyMTZ9.-XK9KKFK9zYS9FiwpptglIjGNV9cXlR28LDcixQJG8k';
@@ -44,6 +44,7 @@ $(document).ready(function () {
     });
 
     connection.on("ArtifactWon", function (id) {
+        artifacts[id].show = false;
         viewer.entities.remove(artifacts[id]);
         artifacts[id] = null;
     }
@@ -84,7 +85,7 @@ $(document).ready(function () {
                 });
                 var lab = {
                     text: name,
-                    font: '18px Times New Roman',
+                    font: 'bold 24px Segoe UI Semibold',
                     fillColor: Cesium.Color.SKYBLUE,
                     outlineColor: Cesium.Color.BLACK,
                     outlineWidth: 2,

@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements ILocationListener
         latitude = findViewById(R.id.latitude);
         artifactHunt  =findViewById(R.id.artifacthunt);
         artifactHunt.setOnClickListener(e -> {
-            if(locationService == null || offlineTracking.isChecked()){
+            if(locationService == null || offlineTracking.isChecked() || !sending){
                 Toast.makeText(this,"You have to start online tracking in order to track artifacts!",Toast.LENGTH_LONG).show();
                 return;
             }
@@ -95,6 +95,10 @@ public class MainActivity extends AppCompatActivity implements ILocationListener
                 return;
             }
             if (!sending) {
+                if(name.getText().toString().length() == 0){
+                    Toast.makeText(this,"Please insert a name!",Toast.LENGTH_LONG).show();
+                    return;
+                }
                 Intent intent = new Intent(MainActivity.this, LocationService.class);
                 Integer duration = Constants.DEFAULT_INTERVAL_MILLIS;
                 if (interval.getText().toString().length() != 0) {

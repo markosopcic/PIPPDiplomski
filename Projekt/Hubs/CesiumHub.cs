@@ -24,16 +24,6 @@ namespace Projekt.Hubs
             return base.OnDisconnectedAsync(exception);
         }
         
-        public async Task PhoneUserConnected(string user)
-        {
-            ClientsConnections.Add(user, Context.ConnectionId);
-        }
-
-
-        public async Task PhoneUserDisconnected(string user)
-        {
-            ClientsConnections.Remove(user);
-        }
 
         public async Task AddNewFollowing(string user)
         {

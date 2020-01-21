@@ -33,7 +33,7 @@ namespace Projekt.Controllers
             if (id.HasValue)
             {
                 var art = artifactRepository.GetById(id.Value);
-                wsContext.Clients.All.SendAsync("ArtifactSet", id, art.Longitude, art.Latitude);
+                wsContext.Clients.All.SendAsync("ArtifactSet", id.Value, art.Longitude, art.Latitude);
                 return Json(id.Value);
             }
             return BadRequest();

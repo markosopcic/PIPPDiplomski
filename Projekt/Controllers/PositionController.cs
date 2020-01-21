@@ -59,25 +59,6 @@ namespace Projekt.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        [HttpPost]
-        [Route("/AddPosition")]
-        public IActionResult AddPosition([FromBody]PositionDTO position)
-        {
-            if(position == null)
-            {
-                throw new ArgumentNullException(nameof(position));
-            }
-            if (positionRepository.AddPosition(position))
-            {
-
-                return Ok();
-            }
-            else
-            {
-                return BadRequest();
-            }
-            
-        }
 
         [HttpPost]
         [Route("/GetHistoricalData")]
@@ -147,12 +128,12 @@ namespace Projekt.Controllers
                 {
                     wsContext.Clients.All.SendAsync("ArtifactWon", artifact.Id.ToString());
                 }
-
+                artifactRepository.GivePoints(nearArtifacts.Count, position.Name);
             }
 
 
             wsContext.Clients.Group(position.Name).SendAsync("Position",position.Name,position.Latitude, position.Longitude);
-            return Json(nearArtifacts);
+            return Ok();
         }
 
         public IActionResult GetActiveUsers()
