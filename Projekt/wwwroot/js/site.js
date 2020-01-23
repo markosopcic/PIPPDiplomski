@@ -41,6 +41,7 @@ $(document).ready(function () {
 
     connection.on("ArtifactSet", function (id, longitude, latitude) {
         if (artifacts[id] === undefined || artifacts[id] === null) {
+            console.log(latitude + "," + longitude);
             artifacts[id] = viewer.entities.add({
                 position: Cesium.Cartesian3.fromDegrees(longitude, latitude),
                 billboard: {
@@ -76,7 +77,7 @@ $(document).ready(function () {
         newButton.className = "btn btn-info";
         newButton.style = "float:right;height:100%;display: inline-flex;text-align: center;font-size:x-small;z-index:999999";
         newButton.innerText = "Focus";
-        newButton.onclick = function (event) { userDblClicked(event, viewer, users, name); };
+        newButton.onclick = function (event) { onUserFocused(event, viewer, users, name); };
         newElement.appendChild(newButton);
     });
     connection.on("InactiveUser", function (name) {
@@ -161,7 +162,7 @@ $(document).ready(function () {
                 newButton.className = "btn btn-info";
                 newButton.style = "float:right;height:100%;display: inline-flex;text-align: center;font-size:x-small;z-index:999999";
                 newButton.innerText = "Focus";
-                newButton.onclick = function (event) { userDblClicked(event, viewer, users, name); };
+                newButton.onclick = function (event) { onUserFocused(event, viewer, users, name); };
                 newElement.appendChild(newButton);
             }
         }
@@ -271,7 +272,17 @@ function loadHistoricalData() {
         fromDate = "01-01-2000";
     }
     if (toDate === "") {
-        toDate = Date.now().toString();
+        toDate = new Date();
+        let date = toDate.getDate();
+        let month = toDate.getMonth() + 1;
+        let year = toDate.getFullYear();
+        if (date < 10) {
+            date = "0" + date;
+        }
+        if (month < 10) {
+            month = "0" + month;
+        }
+        toDate = year + "-" + month + "-" + date;
     }
     if (fromTime === "") {
         fromTime = "00:00:00";
@@ -302,6 +313,7 @@ function createPaths(result) {
 
     if (!hasAny) {
         alert("No stored coordinates have been found for the given input!");
+        $("#history-confirm").attr("disabled", false);
         return;
     }
     let maxPaths = 0;
@@ -365,9 +377,7 @@ function createPaths(result) {
                 });
 
             }
-            console.log(czml);
         });
-        console.log("wat");
     }
 }
 
@@ -378,7 +388,7 @@ function toLiveTracking() {
     }
 }
 
-function userDblClicked(event, viewer, users, name) {
+function onUserFocused(event, viewer, users, name) {
     if (users[name] === undefined) return;
     viewer.flyTo(users[name], { offset: new Cesium.HeadingPitchRange(0, -0.5, 1000) });
 }
@@ -400,6 +410,8 @@ function userClicked(event, connection, viewer, users, name) {
         connection.invoke("AddNewFollowing", $(event.target).contents().get(0).nodeValue);
     } else {
         connection.invoke("RemoveFollowing", $(event.target).contents().get(0).nodeValue);
+        viewer.entities.remove(users[$(event.target).contents().get(0).nodeValue]);
+        users[$(event.target).contents().get(0).nodeValue] = null;
     }
 }
 

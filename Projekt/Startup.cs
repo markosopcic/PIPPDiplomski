@@ -40,6 +40,7 @@ namespace Projekt
                 services.AddDbContext<DbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("ProjektContext")));
             else
                 services.AddDbContext<DbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("LocalContext")));
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

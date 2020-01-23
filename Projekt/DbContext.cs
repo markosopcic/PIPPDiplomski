@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Configuration;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
 using Projekt.Models;
 
 namespace Projekt
@@ -9,25 +13,36 @@ namespace Projekt
     {
         public DbContext()
         {
+
+        }
+
+        bool CheckTableExists()
+        {
+            try
+            {
+                this.Positions.Where(s => s.Longitude == -100000).Count();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public DbContext(DbContextOptions<DbContext> options)
             : base(options)
         {
+            if (!CheckTableExists())
+            {
+                var databaseCreator = this.GetService<IRelationalDatabaseCreator>();
+                databaseCreator.CreateTables();
+            }
         }
 
         public virtual DbSet<Artifact> Artifacts { get; set; }
         public virtual DbSet<Position> Positions { get; set; }
         public virtual DbSet<Score> Scores { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseNpgsql("Host=msopcic.hopto.org;Database=projekt;Username=postgres;Password=projekt1234");
-            }
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
