@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements ILocationListener
             }
             Intent intent = new Intent(MainActivity.this, ArtifactSearch.class);
             intent.putExtra("name",name.getText().toString());
+            intent.putExtra("host",host.getText().toString());
             MainActivity.this.startActivity(intent);
         });
         client = new OkHttpClient.Builder().addInterceptor(new LoggingInterceptor()).build();

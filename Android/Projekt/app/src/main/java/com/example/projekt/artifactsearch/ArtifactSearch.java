@@ -20,9 +20,17 @@ public class ArtifactSearch extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         String name = getIntent().getStringExtra("name");
+        String host = getIntent().getStringExtra("host");
+        if(host.length() > 0){
+            if (!host.startsWith("http://")) host = "http://" + host;
+            if(!host.endsWith("/")) host+="/";
+            host+="/Mobile";
+        }else{
+            host = "http://msopcic.hopto.org/Mobile";
+        }
         WebView webView = new WebView(this);
         webView.getSettings().setJavaScriptEnabled(true);
-        webView.loadUrl("http://msopcic.hopto.org/Mobile");
+        webView.loadUrl(host);
         Observable.interval(500, TimeUnit.MILLISECONDS).observeOn(AndroidSchedulers.mainThread()).takeWhile(e -> nameNotSet)
                 .subscribe(e -> webView.evaluateJavascript("setTrackedUser('"+name+"');", g -> {
                     if (g.equals("true")) {
